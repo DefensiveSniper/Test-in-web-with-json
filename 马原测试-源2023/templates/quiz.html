@@ -21,6 +21,14 @@
             left: 10px;
             z-index: 100;
         }
+        .center-page {
+            max-width: 800px;
+            margin: auto;
+            display: flex;
+            justify-content: left;
+            flex-direction: column;
+            align-items: left;
+        }
     </style>
 
     <title>Quiz</title>
@@ -32,15 +40,15 @@
     <!-- Submit All Button -->
     <button id="submit-all-button" onclick="submitAll();" class="btn btn-success">一键提交</button>
 
-    <div class="container mt-5">
+    <div class="container mt-5 center-page">
         {% for question in questions %}
         <div class="mb-3">
-            <p><strong>{{ loop.index }}. {{ question['question'] }}</strong></p>
-            <form id="form{{ loop.index }}">
+            <p><strong>{{ question['number'] }}. {{ question['question'] }}</strong></p>
+            <form id="form{{ question['number'] }}">
                 {% for option in question['options'] %}
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="answer" value="{{ option }}" id="option{{ loop.index }}">
-                    <label class="form-check-label" for="option{{ loop.index }}">
+                    <input class="form-check-input" type="{{ 'checkbox' if question['number'] > 50 and question['number'] <= 80 else 'radio' }}" name="answer" value="{{ option }}" id="option{{ question['number'] }}{{ loop.index }}">
+                    <label class="form-check-label" for="option{{ question['number'] }}{{ loop.index }}">
                         {{ option }}
                     </label>
                 </div>
@@ -63,7 +71,8 @@
                 forms[i].addEventListener('submit', function(event) {
                     event.preventDefault();
                     let formData = new FormData(forms[i]);
-                    let answer = formData.get('answer');
+                    let answerInputs = forms[i].querySelectorAll('input[name="answer"]:checked');
+                    let answer = Array.from(answerInputs).map(input => input.value);
                     let correct_answer = formData.get('correct_answer');
                     fetch('/submit', {
                         method: 'POST',
@@ -89,6 +98,7 @@
                 });
             }
         };
+    </script>
 
         function submitAll() {
             let submitButtons = document.querySelectorAll('button[type="submit"]');

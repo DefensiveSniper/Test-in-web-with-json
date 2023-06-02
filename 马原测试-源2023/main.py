@@ -35,7 +35,8 @@ def quiz():
     selected_panduan = random.sample(panduan_data, 20)
 
     selected_questions = selected_danxuan + selected_duoxuan + selected_panduan
-
+    for i, question in enumerate(selected_questions, start=1):
+        question['number'] = i
     return render_template('quiz.html', questions=selected_questions)
 
 @app.route('/submit', methods=['POST'])
