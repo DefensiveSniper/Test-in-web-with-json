@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        #refresh-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+        }
+        #submit-all-button {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 100;
+        }
+    </style>
+
+    <title>Quiz</title>
+</head>
+<body>
+    <!-- Refresh Button -->
+    <button id="refresh-button" onclick="location.reload();" class="btn btn-info mb-4">刷新</button>
+
+    <!-- Submit All Button -->
+    <button id="submit-all-button" onclick="submitAll();" class="btn btn-success">一键提交</button>
+
+    <div class="container mt-5">
+        {% for question in questions %}
+        <div class="mb-3">
+            <p><strong>{{ loop.index }}. {{ question['question'] }}</strong></p>
+            <form id="form{{ loop.index }}">
+                {% for option in question['options'] %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="answer" value="{{ option }}" id="option{{ loop.index }}">
+                    <label class="form-check-label" for="option{{ loop.index }}">
+                        {{ option }}
+                    </label>
+                </div>
+                {% endfor %}
+                <input type="hidden" name="correct_answer" value="{{ question['answer'] }}">
+                <button type="submit" class="btn btn-primary">提交</button>
+                <span id="result{{ loop.index }}"></span>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        window.onload = function() {
+            let forms = document.getElementsByTagName('form');
+            for (let i = 0; i < forms.length; i++) {
+                forms[i].addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    let formData = new FormData(forms[i]);
+                    let answer = formData.get('answer');
+                    let correct_answer = formData.get('correct_answer');
+                    fetch('/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            'answer': answer,
+                            'correct_answer': correct_answer
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        let resultElement = document.getElementById(`result${i+1}`);
+                        if (data.correct) {
+                            resultElement.textContent = '回答正确';
+                            resultElement.style.color = 'green';
+                        } else {
+                            resultElement.textContent = '回答错误，正确答案为：' + correct_answer + '。';
+                            resultElement.style.color = 'red';
+                        }
+                    });
+                });
+            }
+        };
+
+        function submitAll() {
+            let submitButtons = document.querySelectorAll('button[type="submit"]');
+            for (let i = 0; i < submitButtons.length; i++) {
+                submitButtons[i].click();
+            }
+        }
+    </script>
+</body>
+</html>
